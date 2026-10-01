@@ -124,3 +124,17 @@ Our own funding requires:
 13. docs/08-MOAT-ETHICS-AND-RISK.md
 14. docs/09-METRICS-AND-MIRRORSCORE.md
 15. docs/10-SOURCE-REGISTER.md
+
+
+## Country-localization rule
+
+MirrorAsia is one global platform, but every country requires its own calibrated population.
+
+Rule:
+- reuse the engine,
+- rebuild the population,
+- recalibrate locally,
+- never assume U.S./Bangladesh/Indonesia/Vietnam/Gulf consumers behave the same.
+
+Read:
+docs/13-COUNTRY-BY-COUNTRY-LOCALIZATION-MODEL.md
