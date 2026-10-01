@@ -273,6 +273,7 @@ Potential narrative:
 - [docs/12-SIMILE-TO-MIRRORASIA-EXECUTION-MAP.md](docs/12-SIMILE-TO-MIRRORASIA-EXECUTION-MAP.md) — practical execution sequence from Bangladesh proof to regional scale.
 - [docs/13-COUNTRY-BY-COUNTRY-LOCALIZATION-MODEL.md](docs/13-COUNTRY-BY-COUNTRY-LOCALIZATION-MODEL.md) — same core engine, but separate population data, calibration and market logic for every country.
 - [docs/13-IABC-2026-IDEA-TO-UNICORN-PLAYBOOK.md](docs/13-IABC-2026-IDEA-TO-UNICORN-PLAYBOOK.md) — official-rule-based competition playbook, scoring strategy, team structure, submission checklist, and October execution plan.
+- [docs/14-IABC-OUTCOME-FUNDING-AND-NETWORK-PLAYBOOK.md](docs/14-IABC-OUTCOME-FUNDING-AND-NETWORK-PLAYBOOK.md) — how to turn IABC into pilot customers, NRB support, investor relationships, accelerator access, funding pipeline, and post-event follow-up.
 
 ---
 
