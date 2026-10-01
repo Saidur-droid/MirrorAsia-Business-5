@@ -271,6 +271,7 @@ Potential narrative:
 - [docs/10-SOURCE-REGISTER.md](docs/10-SOURCE-REGISTER.md)
 - [docs/11-SIMILE-COPY-MODIFY-REJECT.md](docs/11-SIMILE-COPY-MODIFY-REJECT.md) — exactly what we copy, modify, or reject from Simile.
 - [docs/12-SIMILE-TO-MIRRORASIA-EXECUTION-MAP.md](docs/12-SIMILE-TO-MIRRORASIA-EXECUTION-MAP.md) — practical execution sequence from Bangladesh proof to regional scale.
+- [docs/13-IABC-2026-IDEA-TO-UNICORN-PLAYBOOK.md](docs/13-IABC-2026-IDEA-TO-UNICORN-PLAYBOOK.md) — official-rule-based competition playbook, scoring strategy, team structure, submission checklist, and October execution plan.
 
 ---
 
