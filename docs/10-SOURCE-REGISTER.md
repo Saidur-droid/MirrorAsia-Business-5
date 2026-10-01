@@ -25,6 +25,30 @@ Supports:
 
 # Simile
 
+Primary product / validation:
+https://www.simile.com/
+
+Series B:
+https://www.simile.com/blog/series-b
+
+Confidence system:
+https://www.simile.com/blog/confidence
+
+What-If Machine / behavioral data strategy:
+https://www.simile.com/blog/what-if-machine
+
+CVS Health case:
+https://www.simile.com/blog/simile-cvs-health
+
+Itaú case:
+https://www.simile.com/blog/itau-at-esomar
+
+The Simulation Company:
+https://www.simile.com/blog/the-simulation-company
+
+Participant privacy:
+https://www.simile.com/privacy
+
 Official:
 https://www.simile.com/blog/series-b
 
@@ -127,3 +151,24 @@ Supports:
 - simulation reduces research cost enough to justify SaaS.
 
 These must be validated with customer and benchmark data.
+
+
+## Simile investor references
+
+Index Series A:
+https://www.indexventures.com/perspectives/life-the-universe-and-simile-leading-similes-series-a/
+
+Supports:
+- $100M Series A,
+- founder/research thesis,
+- early enterprise demand,
+- investor rationale.
+
+Index Series B:
+https://www.indexventures.com/perspectives/simulating-society-at-scale-our-investment-in-similes-200m-series-b/
+
+Supports:
+- $200M Series B,
+- 50+ global team,
+- production-scale enterprise usage narrative,
+- continued investor rationale.
