@@ -258,6 +258,8 @@ Potential narrative:
 - [AI_CONTEXT.md](AI_CONTEXT.md)
 - [source/Pasted text.txt](source/Pasted%20text.txt) — original user plan
 - [docs/01-SIMILE-AND-AARU-REFERENCE.md](docs/01-SIMILE-AND-AARU-REFERENCE.md)
+- [docs/01A-SIMILE-DEEP-DIVE.md](docs/01A-SIMILE-DEEP-DIVE.md) — primary operating reference: product, validation, enterprise GTM, funding, hiring, expansion.
+- [docs/01B-AARU-SECONDARY-VALIDATION.md](docs/01B-AARU-SECONDARY-VALIDATION.md) — separate category-validation reference.
 - [docs/02-BUSINESS-MODEL.md](docs/02-BUSINESS-MODEL.md)
 - [docs/03-PRODUCT-AND-CALIBRATION-ARCHITECTURE.md](docs/03-PRODUCT-AND-CALIBRATION-ARCHITECTURE.md)
 - [docs/04-COMPETITION-BANGLADESH-SEA-GULF.md](docs/04-COMPETITION-BANGLADESH-SEA-GULF.md)
@@ -267,6 +269,8 @@ Potential narrative:
 - [docs/08-MOAT-ETHICS-AND-RISK.md](docs/08-MOAT-ETHICS-AND-RISK.md)
 - [docs/09-METRICS-AND-MIRRORSCORE.md](docs/09-METRICS-AND-MIRRORSCORE.md)
 - [docs/10-SOURCE-REGISTER.md](docs/10-SOURCE-REGISTER.md)
+- [docs/11-SIMILE-COPY-MODIFY-REJECT.md](docs/11-SIMILE-COPY-MODIFY-REJECT.md) — exactly what we copy, modify, or reject from Simile.
+- [docs/12-SIMILE-TO-MIRRORASIA-EXECUTION-MAP.md](docs/12-SIMILE-TO-MIRRORASIA-EXECUTION-MAP.md) — practical execution sequence from Bangladesh proof to regional scale.
 
 ---
 
