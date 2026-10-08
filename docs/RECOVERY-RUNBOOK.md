@@ -43,3 +43,9 @@ Do not share or upload plaintext dumps to cloud artifacts.
   for robust, long-term business recovery.
 
 Never claim backup or recovery completed without end-to-end verification.
+
+## Verified platform limitations (2026-10-08)
+- Neon free project rejects native automatic snapshot schedule: HTTP 404 `backup schedule creation is not enabled for this project`. No snapshot schedule has been activated.
+- A separate SQL-created `mirrorasia_db_reader` role exists as NOLOGIN/NOCREATEDB/NOCREATEROLE/NOINHERIT. This is **not** a usable Cloudflare credential; login credentials and a securely deployed Hyperdrive binding are not yet configured. Do not mistake this for completed Cloudflare integration.
+- Production migration is already applied; never reapply just to fix backup infrastructure.
+- Verified backups: 0. Verified isolated restore drills: 0. GitHub encrypted artifact workflow remains disabled until recovery key and Actions secrets exist.
