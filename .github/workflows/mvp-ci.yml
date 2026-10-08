@@ -19,3 +19,20 @@ jobs:
       - run: npm test
       - run: npm run typecheck
       - run: npm run build
+      - name: Dependency security audit
+        run: npm audit --omit=dev --audit-level=high
+      - name: HTTP integration smoke test
+        shell: bash
+        run: |
+          npm run start -- -p 3100 > /tmp/mirrorasia-next.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" || true' EXIT
+          for i in $(seq 1 35); do
+            if curl --silent --fail http://127.0.0.1:3100/api/health > /tmp/health.json; then break; fi
+            sleep 2
+          done
+          node -e 'const a=require("/tmp/health.json"); if(a.status!=="ok") process.exit(1)'
+          curl --fail --silent --show-error -H "Content-Type: application/json" -X POST \
+            http://127.0.0.1:3100/api/simulate \
+            --data '{"country":"Bangladesh","city":"Dhaka","targetSegment":"young-professionals","concepts":[{"id":"A","name":"Concept Alpha","color":"black","message":"A hypothetical marketing message"},{"id":"B","name":"Concept Beta","color":"red","message":"Another hypothetical marketing message"}],"prices":[79,89,99],"syntheticAgents":120,"seed":42}' > /tmp/result.json
+          node -e 'const a=require("/tmp/result.json"); if(a.rows?.length!==18 || a.mode!=="preview" || a.provenance.realRespondents!==0 || a.confidence.mirrorScore!==null) process.exit(1)'
