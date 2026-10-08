@@ -1,34 +1,45 @@
-# MirrorAsia disaster recovery runbook
-Status: NOT ACTIVATED. Do not claim backups exist until first encrypted dump
-and isolated restoration have been verified.
+# MirrorAsia encrypted backup and recovery runbook
+Status: CODE PREPARED, NOT ACTIVE, NOT RESTORE-VERIFIED (2026-10-08).
 
-## Prerequisites
-1. Confirm target Neon project ID and branch/database identity. Don't touch other projects.
-2. Use only Free Tier quotas. Confirm Cloudflare R2 enabled without an unexpected paid plan.
-3. Create private R2 bucket and restricted write-only backup credentials.
-4. Generate age x25519 recipient (public key) and private identity OFFLINE. Store private
-   identity independently in at least two secure locations; never in GitHub or database.
-5. Add repository secrets for direct Neon connection, age public recipient, R2 endpoint,
-   bucket, and key pair. Enable GitHub Actions variable MIRRORASIA_BACKUPS_ENABLED=true
-   only after one successful manual backup and restore drill.
+## Current architecture
+- Primary: Neon project muddy-forest-80473779, branch production, PostgreSQL 18, four MirrorAsia tables.
+- Retention of Neon branch history is six hours at time of inspection; not a substitute for backups.
+- Free-only fallback: GitHub Actions workflow neon-backup.yml, with encrypted GitHub Actions artifacts.
+- The backup must NEVER upload unencrypted PostgreSQL dumps.
+- Artifacts expire after 14 days and are stored on GitHub. Not an independent long-term backup provider.
+- GitHub Actions scheduling is best effort and may miss runs; this does not guarantee zero data loss.
 
-## Verification (independent test environment only)
-- Fetch encrypted object from the private bucket with privileged recovery credentials.
-- Decrypt with age -d -i offline-identity.txt -o restore.pgcustom backup.age
-- Validate archive using pg_restore -l restore.pgcustom
-- Restore with pg_restore --clean --if-exists only into a NEW isolated, empty test
-  database, never production or a shared database.
-- Compare per-table counts and important invariants, then mark the restore drill complete.
-- Record createdAt, SHA256, destination, restore result, and review date.
-- Test restoration at least monthly, and after migration changes.
+## One-time owner setup, not completed
+1. On a trusted local device generate age identity with `age-keygen -o mirrorasia-recovery-identity.txt`.
+2. Save the **private identity** encrypted/offline in TWO independent owner-controlled places.
+   NEVER paste the private identity into ChatGPT, logs, GitHub or Neon.
+3. Copy just its age1... PUBLIC recipient string.
+4. Set repository Actions secret MIRRORASIA_BACKUP_AGE_RECIPIENT to public recipient.
+5. Set repository Actions secret NEON_DIRECT_DATABASE_URL to the direct (non-pooler)
+   connection string using a narrowly scoped read role, not an admin/owner role.
+   A role created with the Neon API on 2026-10-08 unexpectedly inherited neon_superuser:
+   NEVER use mirrorasia_worker_app as a least-privileged application or backup user.
+6. Once credentials and secure identity custody are confirmed, set
+   repository Actions variable MIRRORASIA_BACKUPS_ENABLED=true, run workflow manually
+   and verify encrypted artifact existence. Then review automatic daily runs.
+7. Perform a decryption + `pg_restore --list` check, and a FULL restoration into a fresh,
+   isolated Neon test database. Never point restoration at production.
 
-## Failure modes
-GitHub scheduler is best-effort, not guaranteed every day. Send failure alerts to
-an actively monitored channel before depending on automation. R2 backup storage
-is one offsite copy, not an absolute zero-data-loss guarantee. Use more than one
-independent copy and restore rehearsals for real customer data.
+## Restore drill
+Download the latest backup artifact while it is still retained. Verify encrypted file
+hash and decrypt using the separately retained private key:
+`age -d -i mirrorasia-recovery-identity.txt -o neon.pgcustom neon.pgcustom.age`
+Check archive listing with PostgreSQL 18 `pg_restore -l neon.pgcustom`.
+Restore to an empty isolated DB using explicit connection parameters and verify schema,
+row counts, foreign keys, and application queries. Store audit record only after passing.
+Do not share or upload plaintext dumps to cloud artifacts.
 
-## Data loss limits
-Recovery point objective with daily backups can be up to 24+ hours of writes.
-Continuous point-in-time recovery depends on Neon's paid/free retention window.
-Never promise "no future data loss" on free infrastructure.
+## Current blockers
+- Backup private key custody and GitHub Actions secrets are not configured.
+- No completed backup artifact or isolated restore drill exists.
+- Cloudflare R2 requires a billing-capable subscription, not approved under free-only/no-billing.
+- Hyperdrive database credential cannot use Neon-created role inheriting neon_superuser.
+- GitHub Actions artifact expiry means additional independent offsite storage is required
+  for robust, long-term business recovery.
+
+Never claim backup or recovery completed without end-to-end verification.
