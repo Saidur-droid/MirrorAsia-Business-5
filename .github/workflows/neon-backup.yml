@@ -1,0 +1,31 @@
+name: Neon encrypted backup (disabled until configured)
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "25 2 * * *"
+permissions:
+  contents: read
+concurrency:
+  group: mirrorasia-neon-backup
+  cancel-in-progress: false
+jobs:
+  backup:
+    if: vars.MIRRORASIA_BACKUPS_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install backup tooling
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client age awscli
+      - name: Dump, encrypt and upload private backup
+        env:
+          DATABASE_URL: ${{ secrets.NEON_DIRECT_DATABASE_URL }}
+          AGE_RECIPIENT: ${{ secrets.MIRRORASIA_BACKUP_AGE_RECIPIENT }}
+          CLOUDFLARE_R2_ENDPOINT: ${{ secrets.MIRRORASIA_R2_ENDPOINT }}
+          R2_BACKUP_BUCKET: ${{ secrets.MIRRORASIA_R2_BUCKET }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.MIRRORASIA_R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.MIRRORASIA_R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+        run: bash scripts/backup-neon.sh
