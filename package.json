@@ -12,7 +12,8 @@
     "start": "next start",
     "test": "node --disable-warning=ExperimentalWarning --experimental-strip-types --test tests/*.test.ts",
     "typecheck": "tsc --noEmit",
-    "build:pages": "node scripts/build-pages.mjs"
+    "build:pages": "node scripts/build-pages.mjs",
+    "build:worker": "node scripts/build-worker.mjs"
   },
   "dependencies": {
     "next": "^16.4.0",
