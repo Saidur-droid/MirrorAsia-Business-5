@@ -4,7 +4,7 @@ on:
     branches: ["main", "feat/iabc-2026-mvp-foundation"]
   pull_request:
 permissions:
-  contents: write
+  contents: read
 jobs:
   validate:
     runs-on: ubuntu-latest
@@ -20,16 +20,6 @@ jobs:
         run: npm run build:pages
       - name: Generate standalone Cloudflare Worker bundle
         run: npm run build:worker
-      - name: Publish Worker bundle in feature branch for controlled API deployment
-        if: github.event_name == 'push' && github.ref == 'refs/heads/feat/iabc-2026-mvp-foundation'
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -f cloudflare-generated/mirrorasia-worker.mjs
-          if ! git diff --cached --quiet; then
-            git commit -m "build: publish reproducible Cloudflare Worker bundle"
-            git push origin HEAD:refs/heads/feat/iabc-2026-mvp-foundation
-          fi
       - run: npm test
       - run: npm run typecheck
       - run: npm run build
