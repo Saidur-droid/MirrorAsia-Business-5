@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { timingSafeEqual } from "node:crypto";
 import { parseScenario, ScenarioInputError } from "../../../lib/schema.ts";
 import { runSimulation } from "../../../lib/engine.ts";
 import { getModelEstimates, ModelOutputError } from "../../../lib/ai.ts";
@@ -17,12 +18,20 @@ export async function POST(request: NextRequest) {
   }
   try {
     const scenario = parseScenario(payload);
-    const live = process.env.MIRRORASIA_AI_MODE === "live";
+    // Two explicit server-side switches prevent accidental paid inference.
+    const live = process.env.MIRRORASIA_AI_MODE === "live" && process.env.MIRRORASIA_ENABLE_PAID_AI === "true";
     if (!live) return NextResponse.json(runSimulation(scenario), { headers: { "Cache-Control": "no-store" } });
     const secret = process.env.MIRRORASIA_DEMO_ACCESS_KEY;
     const provided = request.headers.get("x-demo-access-key");
-    if (!secret || secret.length < 24 || !provided || provided !== secret) {
+    const safeMatch = Boolean(secret && provided && secret.length >= 24 &&
+      Buffer.byteLength(secret) === Buffer.byteLength(provided) &&
+      timingSafeEqual(Buffer.from(secret), Buffer.from(provided)));
+    if (!safeMatch) {
       return NextResponse.json({ error: "Live AI is protected; valid demo access key required." }, { status: 401 });
+    }
+    // Live AI must remain unavailable on shared public preview deployments.
+    if (process.env.MIRRORASIA_PUBLIC_PREVIEW === "true") {
+      return NextResponse.json({ error: "Paid AI is disabled on public preview." }, { status: 403 });
     }
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) return NextResponse.json({ error: "Live AI is not configured." }, { status: 503 });
