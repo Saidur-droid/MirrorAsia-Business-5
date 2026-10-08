@@ -1,4 +1,4 @@
-name: Neon encrypted backup (disabled until configured)
+name: Neon encrypted backup (opt-in, not yet activated)
 on:
   workflow_dispatch:
   schedule:
@@ -12,20 +12,40 @@ jobs:
   backup:
     if: vars.MIRRORASIA_BACKUPS_ENABLED == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
-      - name: Install backup tooling
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq postgresql-client age awscli
-      - name: Dump, encrypt and upload private backup
+      - name: Install encryption tools
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq age
+      - name: Check backup secrets are configured
         env:
           DATABASE_URL: ${{ secrets.NEON_DIRECT_DATABASE_URL }}
           AGE_RECIPIENT: ${{ secrets.MIRRORASIA_BACKUP_AGE_RECIPIENT }}
-          CLOUDFLARE_R2_ENDPOINT: ${{ secrets.MIRRORASIA_R2_ENDPOINT }}
-          R2_BACKUP_BUCKET: ${{ secrets.MIRRORASIA_R2_BUCKET }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.MIRRORASIA_R2_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.MIRRORASIA_R2_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: auto
-        run: bash scripts/backup-neon.sh
+        run: |
+          test -n "$DATABASE_URL" || { echo "Missing backup DB secret"; exit 1; }
+          [[ "$AGE_RECIPIENT" == age1* ]] || { echo "Missing public age recipient"; exit 1; }
+      - name: Dump with PostgreSQL 18 then encrypt immediately
+        env:
+          DATABASE_URL: ${{ secrets.NEON_DIRECT_DATABASE_URL }}
+          AGE_RECIPIENT: ${{ secrets.MIRRORASIA_BACKUP_AGE_RECIPIENT }}
+        run: |
+          set -euo pipefail
+          umask 077
+          mkdir -p "$RUNNER_TEMP/mirrorasia"
+          docker run --rm -e DATABASE_URL -v "$RUNNER_TEMP/mirrorasia:/out" postgres:18 \
+            sh -c 'pg_dump --dbname="$DATABASE_URL" --format=custom --no-owner --no-acl --file=/out/neon.pgcustom && pg_restore --list /out/neon.pgcustom >/dev/null'
+          age -r "$AGE_RECIPIENT" -o "$RUNNER_TEMP/mirrorasia/neon.pgcustom.age" "$RUNNER_TEMP/mirrorasia/neon.pgcustom"
+          sha256sum "$RUNNER_TEMP/mirrorasia/neon.pgcustom.age" > "$RUNNER_TEMP/mirrorasia/encrypted.sha256"
+          rm -f "$RUNNER_TEMP/mirrorasia/neon.pgcustom"
+          test ! -e "$RUNNER_TEMP/mirrorasia/neon.pgcustom"
+      - name: Upload encrypted artifact only
+        uses: actions/upload-artifact@v4
+        with:
+          name: mirrorasia-neon-encrypted-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/mirrorasia/neon.pgcustom.age
+            ${{ runner.temp }}/mirrorasia/encrypted.sha256
+          if-no-files-found: error
+          retention-days: 14
+      - name: Verify artifact metadata
+        run: echo "Encrypted archive uploaded; independent restore still required."
