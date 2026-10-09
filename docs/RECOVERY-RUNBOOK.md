@@ -49,3 +49,13 @@ Never claim backup or recovery completed without end-to-end verification.
 - A separate SQL-created `mirrorasia_db_reader` role exists as NOLOGIN/NOCREATEDB/NOCREATEROLE/NOINHERIT. This is **not** a usable Cloudflare credential; login credentials and a securely deployed Hyperdrive binding are not yet configured. Do not mistake this for completed Cloudflare integration.
 - Production migration is already applied; never reapply just to fix backup infrastructure.
 - Verified backups: 0. Verified isolated restore drills: 0. GitHub encrypted artifact workflow remains disabled until recovery key and Actions secrets exist.
+
+## Manual Neon snapshot restoration drill (2026-10-09)
+- Production snapshot created: `snap-sweet-cherry-b551dslf`.
+- Snapshot restored to isolated test branch: `br-lingering-heart-b5zkpn6d`.
+- The restoration operation finalized with default branch name swap. The original production branch `br-raspy-sunset-b5577y3z` was explicitly restored as the **default** branch and renamed `production`; verified via `list_branches`.
+- Four expected `mirrorasia_*` tables verified on the isolated restored branch; study, scenario, result and backup-check counts all zero (same as source at snapshot creation).
+- The restored non-production branch was **retained**; no branches or data were deleted.
+- This proves manual *Neon-native snapshot restore* can recreate the test schema. It **does not** verify `pg_dump` age-encryption, GitHub Actions artifact upload, owner-held decryption key or offsite backup restore.
+- Future drills: Neon `restore_snapshot` with `finalize: true` can automatically reassign the default production branch! Never use `finalize: true` for production recovery drills. Plan and check `finalize: false` semantics on a non-production branch or use an isolated dump restoration to prevent any production identity swaps.
+- Current backup automation remains disabled until GitHub Actions secrets and separately retained recovery identity are configured. Native Neon scheduled snapshot API was unavailable on the free project.
