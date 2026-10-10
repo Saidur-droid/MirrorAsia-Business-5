@@ -1,0 +1,32 @@
+name: Sync development lockfile once
+on:
+  push:
+    branches: [feat/iabc-2026-mvp-foundation]
+    paths:
+      - ".github/workflows/sync-lock-once.yml"
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  sync:
+    if: github.ref == 'refs/heads/feat/iabc-2026-mvp-foundation'
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Resolve lockfile only
+        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+      - name: Commit lockfile update
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- package-lock.json; then exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package-lock.json
+          git commit -m "build: synchronize lockfile with pg Worker diagnostic"
+          git push origin HEAD:feat/iabc-2026-mvp-foundation
