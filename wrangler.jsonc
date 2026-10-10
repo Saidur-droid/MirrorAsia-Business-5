@@ -1,0 +1,19 @@
+{
+  "name": "mirrorasia-iabc-2026",
+  "main": "cloudflare-generated/mirrorasia-worker.mjs",
+  "compatibility_date": "2026-10-10",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "workers_dev": true,
+  "hyperdrive": [
+    {
+      "binding": "HYPERDRIVE",
+      "id": "98d592e539524d3ba7cb63a41bb9acf9"
+    }
+  ],
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 0.1
+  }
+}

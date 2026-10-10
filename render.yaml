@@ -1,0 +1,18 @@
+# Blueprint documentation only. Does NOT deploy anything automatically.
+# Free instance may sleep after inactivity; do not enable paid plans.
+services:
+  - type: web
+    name: mirrorasia-iabc-preview
+    runtime: node
+    plan: free
+    region: singapore
+    branch: feat/iabc-2026-mvp-foundation
+    buildCommand: npm ci && npm run build
+    startCommand: npm run start -- -p $PORT
+    healthCheckPath: /api/health
+    autoDeployTrigger: off
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MIRRORASIA_AI_MODE
+        value: preview
