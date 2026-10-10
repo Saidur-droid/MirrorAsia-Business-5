@@ -12,5 +12,5 @@ await writeFile("worker/generated-assets.ts",
   "export const JS="+JSON.stringify(js)+";\n"+
   "export const CSS="+JSON.stringify(css)+";\n");
 await build({entryPoints:["worker/entry.ts"],outfile:"cloudflare-generated/mirrorasia-worker.mjs",
- bundle:true,platform:"browser",format:"esm",target:"es2022",minify:true});
+ bundle:true,platform:"node",format:"esm",target:"es2022",minify:true});
 console.log("Worker bundle built and ready for authenticated Cloudflare deployment");
