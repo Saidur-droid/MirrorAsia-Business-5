@@ -1,0 +1,33 @@
+name: Produce Cloudflare-native Worker bundle once
+on:
+  push:
+    branches: [feat/iabc-2026-mvp-foundation]
+    paths: [".github/workflows/wrangler-bundle-once.yml"]
+permissions:
+  contents: write
+jobs:
+  bundle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: "22"}
+      - run: npm ci --no-audit --no-fund
+      - run: npm run build:pages
+      - name: Build Cloudflare-native Worker ESM
+        run: |
+          set -euo pipefail
+          npx --yes wrangler@4 deploy worker/entry.ts --name mirrorasia-db-test-20261010 --compatibility-date 2026-10-10 --compatibility-flags nodejs_compat --dry-run --outdir /tmp/mirrorasia-wrangler
+          find /tmp/mirrorasia-wrangler -maxdepth 2 -type f -printf '%p %s bytes\n'
+          output=$(find /tmp/mirrorasia-wrangler -maxdepth 2 -type f -name '*.js' | head -n1)
+          test -n "$output"
+          cp "$output" cloudflare-generated/mirrorasia-worker-native.mjs
+      - name: Commit deployment bundle
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add cloudflare-generated/mirrorasia-worker-native.mjs
+          git commit -m "build(worker): cloudflare-native bundled runtime" || exit 0
+          git push origin HEAD:feat/iabc-2026-mvp-foundation
