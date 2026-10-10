@@ -1,6 +1,25 @@
 import {HTML, JS, CSS} from "./generated-assets";
+import {Client} from "pg";
 import {parseScenario,ScenarioInputError} from "../src/lib/schema";
 import {runSimulation} from "../src/lib/engine";
+type WorkerEnv={HYPERDRIVE?:{connectionString:string},DB_DIAGNOSTICS_TOKEN?:string};
+function constantTimeMatch(left:string,right:string){
+ const a=new TextEncoder().encode(left),b=new TextEncoder().encode(right);
+ if(a.length!==b.length)return false;
+ let diff=0;for(let i=0;i<a.length;i++)diff|=a[i]^b[i];return diff===0;
+}
+async function checkDatabase(env:WorkerEnv,request:Request){
+ const token=env.DB_DIAGNOSTICS_TOKEN;
+ if(!token||token.length<32||!constantTimeMatch(request.headers.get("x-mirrorasia-diagnostics")||"",token))return json({error:"Not found"},404);
+ if(!env.HYPERDRIVE)return json({status:"unavailable",reason:"binding_missing"},503);
+ const client=new Client({connectionString:env.HYPERDRIVE.connectionString,connectionTimeoutMillis:3500,query_timeout:4000,statement_timeout:4000,application_name:"mirrorasia-health"});
+ try{
+  await client.connect();
+  const result=await client.query("SELECT 1 AS connected, (SELECT count(*)::integer FROM pg_catalog.pg_tables WHERE schemaname = 'public' AND tablename LIKE 'mirrorasia_%') AS table_count");
+  return json({status:"ok",database:"connected",table_count:Number(result.rows[0]?.table_count||0)});
+ }catch(_error){return json({status:"unavailable",database:"connection_failed"},503)}
+ finally{try{await client.end()}catch{/* no credential or error output */}}
+}
 const jsonHeaders={"cache-control":"no-store","x-content-type-options":"nosniff","referrer-policy":"strict-origin-when-cross-origin","x-frame-options":"DENY"};
 function json(value:unknown,status=200){return new Response(JSON.stringify(value),{status,headers:{"content-type":"application/json; charset=utf-8",...jsonHeaders}})}
 const extraHeaders={
@@ -9,8 +28,9 @@ const extraHeaders={
  "permissions-policy":"camera=(), microphone=(), geolocation=()"
 };
 export default {
- async fetch(request:Request):Promise<Response> {
+ async fetch(request:Request,env:WorkerEnv):Promise<Response> {
    const url=new URL(request.url);
+   if(url.pathname==="/api/internal/db-check") {if(request.method!=="GET")return json({error:"Method not allowed"},405);return checkDatabase(env,request);}
    if(request.method==="GET" && url.pathname==="/api/health")
      return json({status:"ok",service:"mirrorasia-mvp",runtime:"cloudflare-worker",version:"0.1.0"});
    if(url.pathname==="/api/simulate") {
