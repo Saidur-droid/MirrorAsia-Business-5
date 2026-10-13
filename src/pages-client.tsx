@@ -2,7 +2,6 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import Landing from "./app/landing";
 import Studio from "./app/page";
-import "./app/landing.css";
 
 function App() {
   const [pathname, setPathname] = React.useState(window.location.pathname);
