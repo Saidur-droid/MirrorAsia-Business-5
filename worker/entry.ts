@@ -51,7 +51,7 @@ export default {
    }
    if(request.method!=="GET" && request.method!=="HEAD")
      return json({error:"Method not allowed"},405);
-   if(url.pathname==="/"||url.pathname==="/index.html")
+   if(url.pathname==="/"||url.pathname==="/studio"||url.pathname==="/index.html")
      return new Response(request.method==="HEAD"?null:HTML,{headers:{"content-type":"text/html; charset=utf-8","cache-control":"no-cache",...extraHeaders}});
    if(url.pathname==="/assets/entry.js")
      return new Response(request.method==="HEAD"?null:JS,{headers:{"content-type":"text/javascript; charset=utf-8","cache-control":"public,max-age=300",...extraHeaders}});
