@@ -17,3 +17,55 @@
 @media(max-width:1050px){.ma-nav{gap:18px}.ma-header{padding:0 28px}.ma-hero{min-height:710px}.ma-hero-content{width:80vw}.ma-island{scale:.8}.ma-island:nth-child(1){left:-10%!important}.ma-island:nth-child(4){left:83%!important}.ma-island:nth-child(5){left:-8%!important}}
 @media(max-width:710px){.ma-header{height:78px;padding:0 22px;gap:10px}.ma-brand{font-size:22px}.ma-logo{font-size:31px}.ma-nav{display:none}.ma-button-small{padding:12px 14px;font-size:11px;margin-left:auto;gap:6px}.ma-hero{height:auto;min-height:695px;margin-top:0}.ma-hero-content{width:100%;padding:50px 22px 40px;margin-top:-20px}.ma-hero h1{font-size:clamp(43px,9.5vw,67px);letter-spacing:-.063em;margin:30px auto 24px}.ma-lead{font-size:17px;line-height:1.6;max-width:550px}.ma-announcement{font-size:10px;gap:8px;padding:10px 12px}.ma-island{scale:.54;opacity:.5}.ma-island:nth-child(1){left:-105px!important;top:30px!important}.ma-island:nth-child(2){top:-95px!important}.ma-island:nth-child(3){left:80%!important;top:52px!important}.ma-island:nth-child(4){left:94%!important;top:56%!important}.ma-island:nth-child(5){left:-105px!important;top:68%!important}.ma-island:nth-child(6){left:70%!important;top:83%!important}.ma-card-grid{grid-template-columns:1fr}.ma-section{padding:72px 24px}.ma-feature{min-height:0}.ma-band{padding:80px 22px}.ma-footer{padding:28px 23px;flex-wrap:wrap;gap:13px}}
 @media(prefers-reduced-motion:reduce){.ma-island{animation:none}.ma-button,.ma-feature,.ma-nav a{transition:none}.ma-button:hover,.ma-feature:hover{transform:none}}
+
+
+/* Bangladesh landmark art and premium hero v2. Overrides legacy placeholder positioning. */
+.ma-landing{--coral:#fa5547;--ink:#191920;background:#fcfaf8;color:var(--ink)}
+.ma-header{height:88px;max-width:1670px;padding:0 5.5%}
+.ma-brand{font-weight:760;letter-spacing:-1.5px}
+.ma-nav{gap:36px}
+.ma-button{border-radius:7px;box-shadow:0 10px 23px #fb55461b}
+.ma-hero{height:calc(100svh - 88px);min-height:740px;max-height:940px;position:relative;isolation:isolate;overflow:hidden;display:grid;place-items:center}
+.ma-city-world{z-index:0;background:radial-gradient(ellipse 32% 22% at 1% 85%,#f5efe8 0,transparent 95%),radial-gradient(ellipse 27% 20% at 98% 80%,#eaf3ef 0,transparent 95%),#fcfaf8}
+.ma-island{opacity:.98;animation:none;translate:none;scale:1;filter:none;will-change:transform;transform:translate3d(var(--ma-px,0px),var(--ma-py,0px),0)}
+.ma-island-inner{position:relative;animation:ma-float-city 9s ease-in-out infinite}
+.ma-city-chattogram .ma-island-inner{animation-duration:11s;animation-delay:-5s}
+.ma-city-sylhet .ma-island-inner{animation-duration:10s;animation-delay:-3s}
+.ma-island img{display:block;width:100%;height:auto;filter:drop-shadow(0 10px 18px #526d6614);user-select:none}
+.ma-island-name{position:absolute;bottom:13%;left:50%;font-size:10px;letter-spacing:.18em;font-weight:750;text-transform:uppercase;color:#678579;opacity:.6}
+.ma-city-dhaka{width:min(36vw,555px);left:-4.5%;top:-4%;rotate:-3deg}
+.ma-city-chattogram{width:min(36vw,550px);right:-5.5%;top:5%;rotate:3deg}
+.ma-city-sylhet{width:min(34vw,525px);left:-8.6%;bottom:-5%;rotate:2deg}
+.ma-hero-content{z-index:2;width:min(900px,72vw);padding:48px 18px 28px;margin-top:-45px;background:radial-gradient(ellipse at center,#fcfaf8f2 17%,#fcfaf8b9 63%,transparent 81%)}
+.ma-announcement{border-color:#e8dfdc;background:#fffffff2;font-size:13px;font-weight:550;padding:12px 19px}
+.ma-hero h1{font-size:clamp(47px,4.7vw,78px);line-height:1.12;letter-spacing:-.065em;font-weight:600;margin:37px 0 22px;color:#16171d}
+.ma-lead{max-width:645px;font-size:clamp(17px,1.35vw,21px);line-height:1.58;letter-spacing:-.024em;margin:0 auto 33px;color:#797a82}
+.ma-primary{min-width:226px;padding:18px 30px}
+.ma-caption{font-size:11px;margin:22px auto 0}
+.ma-signals{position:absolute;bottom:70px;z-index:2;left:0;right:0;display:flex;align-items:center;justify-content:center;gap:58px;font-size:13px;font-weight:700;letter-spacing:.015em;color:#bbb8b7}
+.ma-signals span::before{content:"✦";margin-right:9px;color:#c5c9c7;font-size:18px}
+@keyframes ma-float-city{0%,100%{transform:translate3d(0,0,0)}50%{transform:translate3d(0,-13px,0)}}
+@media(max-width:1050px){
+ .ma-city-dhaka{width:440px;left:-165px!important;top:-25px!important}
+ .ma-city-chattogram{width:440px;right:-180px;left:auto!important;top:10px!important}
+ .ma-city-sylhet{width:445px;left:-180px!important;bottom:-35px;top:auto!important}
+ .ma-hero-content{width:min(720px,78vw)}
+ .ma-signals{gap:23px;bottom:60px}
+ .ma-island{scale:1}
+}
+@media(max-width:710px){
+ .ma-hero{height:auto;min-height:705px;max-height:none}
+ .ma-hero-content{width:100%;padding:59px 20px 52px;margin-top:-33px}
+ .ma-hero h1{font-size:clamp(41px,9.7vw,66px);letter-spacing:-.06em;margin:31px auto 23px}
+ .ma-lead{font-size:17px;line-height:1.56;max-width:500px}
+ .ma-announcement{font-size:10px;padding:10px 12px;gap:7px}
+ .ma-city-dhaka{width:410px;left:-255px!important;top:-38px!important;opacity:.36}
+ .ma-city-chattogram{width:410px;right:-268px;left:auto!important;top:-5px!important;opacity:.34}
+ .ma-city-sylhet{width:410px;left:-267px!important;bottom:-70px;top:auto!important;opacity:.34}
+ .ma-island{scale:1}
+ .ma-island-name{display:none}
+ .ma-signals{bottom:35px;font-size:10px;gap:15px;flex-wrap:wrap;left:15px;right:15px}
+ .ma-signals span::before{font-size:12px;margin-right:5px}
+}
+@media(max-width:370px){.ma-announcement{white-space:normal}.ma-hero h1{font-size:39px}.ma-city-chattogram{right:-285px}}
+@media(prefers-reduced-motion:reduce){.ma-island{animation:none;transform:none!important;will-change:auto}.ma-island-inner{animation:none!important}}
