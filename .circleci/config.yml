@@ -1,0 +1,84 @@
+# MirrorAsia Free Tier CI; never deploys production and requires no Cloudflare token.
+version: 2.1
+jobs:
+  validate:
+    docker:
+      - image: cimg/node:22.16
+    resource_class: small
+    working_directory: ~/mirrorasia
+    environment:
+      CI: "true"
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - checkout
+      - run:
+          name: Install locked dependencies
+          command: npm ci --no-audit --no-fund
+      - run:
+          name: Build Cloudflare frontend
+          command: npm run build:pages
+      - run:
+          name: Check landing, studio and assets
+          command: |
+            node --input-type=module -e '
+              import fs from "node:fs";
+              const html = fs.readFileSync("dist/index.html", "utf8");
+              const js = fs.readFileSync("dist/assets/entry.js", "utf8");
+              const css = fs.readFileSync("dist/assets/app.css", "utf8");
+              if (!html.includes("/assets/entry.js") || !js.includes("Simulate better") || !js.includes("/studio") || !css.includes(".ma-landing")) process.exit(1);
+              console.log("Landing and studio are present in the built assets.");
+            '
+      - run:
+          name: Build native Cloudflare Worker without deploying
+          command: npm run build:worker
+      - run:
+          name: Verify Worker artifact
+          command: |
+            test -s cloudflare-generated/mirrorasia-worker-native.mjs
+            grep -q '/api/simulate' cloudflare-generated/mirrorasia-worker-native.mjs
+            grep -q '/studio' cloudflare-generated/mirrorasia-worker-native.mjs
+      - run:
+          name: Unit tests
+          command: npm test
+      - run:
+          name: TypeScript checks
+          command: npm run typecheck
+      - run:
+          name: Build Next.js application
+          command: npm run build
+      - run:
+          name: Dependency security audit
+          command: npm audit --omit=dev --audit-level=high
+      - run:
+          name: HTTP health and simulation smoke test
+          command: |
+            npm run start -- -p 3100 > /tmp/mirrorasia-next.log 2>&1 &
+            server_pid=$!
+            trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+            ready=0
+            for i in $(seq 1 35); do
+              if curl --silent --fail http://127.0.0.1:3100/api/health > /tmp/mirrorasia-health.json; then ready=1; break; fi
+              sleep 2
+            done
+            if [ "$ready" -ne 1 ]; then cat /tmp/mirrorasia-next.log; exit 1; fi
+            node -e 'const h=require("/tmp/mirrorasia-health.json");if(h.status!=="ok")process.exit(1)'
+            curl --fail --silent --show-error -H 'Content-Type: application/json' -X POST \
+              http://127.0.0.1:3100/api/simulate \
+              --data '{"country":"Bangladesh","city":"Dhaka","targetSegment":"young-professionals","concepts":[{"id":"A","name":"Concept Alpha","color":"black","message":"A hypothetical marketing message"},{"id":"B","name":"Concept Beta","color":"red","message":"Another hypothetical marketing message"}],"prices":[79,89,99],"syntheticAgents":120,"seed":42}' \
+              > /tmp/mirrorasia-simulation.json
+            node -e 'const r=require("/tmp/mirrorasia-simulation.json");if(r.rows?.length!==18||r.mode!=="preview"||r.provenance.realRespondents!==0||r.confidence.mirrorScore!==null)process.exit(1)'
+      - store_artifacts:
+          path: cloudflare-generated/mirrorasia-worker-native.mjs
+          destination: mirrorasia-native-worker
+      - store_artifacts:
+          path: dist
+          destination: mirrorasia-frontend
+workflows:
+  mirrorasia-ci:
+    jobs:
+      - validate:
+          filters:
+            branches:
+              only:
+                - main
+                - feat/iabc-2026-mvp-foundation
