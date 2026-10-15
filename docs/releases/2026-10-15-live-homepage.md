@@ -44,7 +44,7 @@ A short-lived Cloudflare service-bound test harness invoked the actual staging W
 
 The diagnostic harness URL was disabled after verification. No database writes were used by these tests.
 
-Local tests: seven routing/security/preservation tests passed, with a recorded failing baseline before implementation. Local browser DOM checks passed at widths 344, 390, 768, 1366, and 1672, including CTA, mobile navigation, pause/resume and reduced motion. These were local DOM tests, not falsely represented as public HTTP tests. Public staging additionally passed desktop and mobile browser inspection; the mobile body measured 390px at a 390px viewport.
+Local tests: seven routing/security/preservation tests passed, with a recorded failing baseline before implementation. Local browser DOM checks passed at widths 320, 390, 768, 1366, and 1672, including CTA, mobile navigation, pause/resume and reduced motion. These were local DOM tests, not falsely represented as public HTTP tests. Public staging additionally passed desktop and mobile browser inspection; the mobile body measured 390px at a 390px viewport.
 
 ## Content and artwork hashes
 
@@ -62,6 +62,6 @@ Artwork is a decorative illustration adapted from the user's supplied reference,
 
 This release used a directly verified Cloudflare module upload, not a claimed new CircleCI success. The earlier React-only feature-branch build and its generated artifacts are NOT the authoritative artifact for this production release. Do not upload those older artifacts over production.
 
-Before changing deployment automation, retrieve the current production Worker via the authenticated Cloudflare script-content API, preserve all four modules, and verify the module hashes above. Integrate the homepage source and atlas into the repository build in a follow-up change, then test staging before replacing this release. A source/artwork/test package accompanies the conversation deliverable.
+Before changing deployment automation, retrieve the current production Worker via the authenticated Cloudflare script-content API, preserve all four modules, and verify the module hashes above. Integrate the homepage source and atlas into the repository build in a follow-up change, then test staging before replacing this release. The deployed source and artwork are recoverable from these four Worker modules; a separate downloadable source package is not provided in this response.
 
 Outstanding database integration, encrypted backup restoration and real-human model calibration are separate workstreams and are not claimed complete by this UI release.
