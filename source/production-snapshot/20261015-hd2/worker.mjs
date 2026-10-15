@@ -1,0 +1,1 @@
+import legacy from "./legacy.mjs";import assets from "./homepage-assets.mjs";import {createHomepageWrapper} from "./homepage-router.mjs";export default createHomepageWrapper(legacy,assets);
