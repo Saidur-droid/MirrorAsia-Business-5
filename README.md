@@ -272,8 +272,6 @@ Potential narrative:
 - [docs/11-SIMILE-COPY-MODIFY-REJECT.md](docs/11-SIMILE-COPY-MODIFY-REJECT.md) — exactly what we copy, modify, or reject from Simile.
 - [docs/12-SIMILE-TO-MIRRORASIA-EXECUTION-MAP.md](docs/12-SIMILE-TO-MIRRORASIA-EXECUTION-MAP.md) — practical execution sequence from Bangladesh proof to regional scale.
 - [docs/13-COUNTRY-BY-COUNTRY-LOCALIZATION-MODEL.md](docs/13-COUNTRY-BY-COUNTRY-LOCALIZATION-MODEL.md) — same core engine, but separate population data, calibration and market logic for every country.
-- [docs/13-IABC-2026-IDEA-TO-UNICORN-PLAYBOOK.md](docs/13-IABC-2026-IDEA-TO-UNICORN-PLAYBOOK.md) — official-rule-based competition playbook, scoring strategy, team structure, submission checklist, and October execution plan.
-- [docs/14-IABC-OUTCOME-FUNDING-AND-NETWORK-PLAYBOOK.md](docs/14-IABC-OUTCOME-FUNDING-AND-NETWORK-PLAYBOOK.md) — how to turn IABC into pilot customers, NRB support, investor relationships, accelerator access, funding pipeline, and post-event follow-up.
 
 ---
 
@@ -282,3 +280,7 @@ Potential narrative:
 Whenever we ask what MirrorAsia should build next:
 
 > Prefer the feature that improves predictive calibration, benchmark trust or data defensibility — not the feature that merely makes the AI demo more impressive.
+
+## Competition submission documents
+
+CloudCamp / International AI Builders Congress 2026 submission plans, form answers, readiness gates and networking records are managed **only** in the central [Global Hackathon Opportunity Tracking workspace](https://github.com/Saidur-droid/global-hackathon-opportunity-tracking/blob/main/opportunities/international-ai-builders-congress-2026/MIRRORASIA/README.md). This product repository retains general business and product architecture only.
