@@ -75,3 +75,33 @@ test("valid model estimates enter live-ai mode without claiming calibration", ()
   assert.equal(result.provenance.realRespondents, 0);
   assert.equal(result.confidence.validatedErrorRange, null);
 });
+
+test("default segment and concept examples expose price sensitivity rather than equal flat scores", () => {
+  const result = runSimulation(parseScenario(raw));
+  for (const segment of SEGMENTS) {
+    for (const conceptId of ["A", "B"]) {
+      const series = result.rows.filter(row => row.segment === segment && row.conceptId === conceptId);
+      assert.equal(series.length, 3);
+      assert.ok(series[0].interestIndex > series[2].interestIndex,
+        segment + " / " + conceptId + ": default BDT79 and BDT99 should differ");
+      assert.ok(series.every(row => row.syntheticPositiveSignals <= row.syntheticAgents));
+      assert.ok(series.every(row => row.assumedProbability >= 0 && row.assumedProbability <= 1));
+    }
+  }
+});
+
+test("scenario copy is not silently analyzed by deterministic preview", () => {
+  const scenario = parseScenario(raw);
+  const first = runSimulation(scenario);
+  const altered = {
+    ...scenario,
+    concepts: [
+      { ...scenario.concepts[0], message: "A different marketing message for hypothetical audiences" },
+      scenario.concepts[1]
+    ] as typeof scenario.concepts
+  };
+  const second = runSimulation(altered);
+  assert.deepEqual(first.rows, second.rows);
+  assert.equal(first.provenance.model, null);
+  assert.equal(first.provenance.realRespondents, 0);
+});
