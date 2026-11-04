@@ -35,6 +35,7 @@ jobs:
         run: |
           npm run build:pages
           npm run build:worker
+          node scripts/build-readiness-staging.mjs
           npm run build
       - name: Audit production dependencies
         run: npm audit --omit=dev --audit-level=high
@@ -42,7 +43,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add package-lock.json worker/generated-assets.ts
+          git add package-lock.json worker/generated-assets.ts cloudflare-generated/mirrorasia-readiness-staging.js
           if ! git diff --staged --quiet; then
             git commit -m "build: refresh patched lockfile and complete Studio assets [skip ci]"
             git push
