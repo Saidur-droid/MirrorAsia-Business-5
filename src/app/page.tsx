@@ -44,8 +44,12 @@ export default function Home() {
   }
   function downloadEvidence() {
     if (!result) return;
-    const quote = (value: string | number | boolean | null) =>
-      '"' + String(value ?? "").replaceAll('"', '""') + '"';
+    const quote = (value: string | number | boolean | null) => {
+      const raw = String(value ?? "");
+      // Spreadsheet applications may execute CSV cells beginning with formula markers.
+      const safe = /^[=+@\-\t\r]/.test(raw) ? "'" + raw : raw;
+      return '"' + safe.replaceAll('"', '""') + '"';
+    };
     const header = ["run_id", "mode", "model", "population_pack", "seed", "real_respondents", "segment", "concept_id", "concept_name", "price_bdt", "synthetic_agents", "synthetic_positive_signals", "illustrative_interest_index", "assumed_probability", "assumption_explanation"];
     const rows = result.rows.map(row => [
       result.runId, result.mode, result.provenance.model, result.provenance.populationPack,
