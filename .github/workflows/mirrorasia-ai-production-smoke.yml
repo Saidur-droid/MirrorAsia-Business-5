@@ -1,0 +1,90 @@
+name: MirrorAsia AI production release — Llama 70B
+on:
+  push:
+    branches: [fix/mirrorasia-readiness-20261104]
+    paths:
+      - ".github/workflows/mirrorasia-ai-production-smoke.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    env:
+      BASE: https://mirrorasia-iabc-2026.mirrorasia-builders.workers.dev
+    steps:
+      - name: Existing animated homepage survives
+        run: |
+          curl -fsS --retry 3 --retry-delay 2 "$BASE/" > /tmp/home.html
+          grep -qi 'Simulate better decisions' /tmp/home.html
+      - name: New full Studio and research assets
+        run: |
+          curl -fsS "$BASE/studio" > /tmp/studio.html
+          curl -fsS "$BASE/assets/entry.js" > /tmp/studio.js
+          curl -fsS "$BASE/assets/app.css" > /tmp/studio.css
+          grep -q '/assets/entry.js' /tmp/studio.html
+          grep -q 'Analyze concepts with AI' /tmp/studio.js
+          grep -q 'Compare consented aggregate research' /tmp/studio.js
+          grep -q 'ai-action' /tmp/studio.css
+      - name: Public health and synthetic simulation remain intact
+        run: |
+          curl -fsS "$BASE/api/health" > /tmp/health.json
+          node -e 'if(require("/tmp/health.json").status!=="ok")process.exit(1)'
+          cat > /tmp/sim.json <<'JSON'
+          {"country":"Bangladesh","city":"Dhaka","targetSegment":"young-professionals","concepts":[{"id":"A","name":"Midnight Focus","color":"black","message":"Fuel the moments that matter"},{"id":"B","name":"Crimson Lift","color":"red","message":"A bright boost for your busy day"}],"prices":[79,89,99],"syntheticAgents":120,"seed":42}
+          JSON
+          curl -fsS -H 'Content-Type: application/json' --data-binary @/tmp/sim.json "$BASE/api/simulate" > /tmp/result.json
+          node <<'JS'
+          const assert=require("node:assert/strict");
+          const d=require("/tmp/result.json");
+          assert.equal(d.mode,"preview");
+          assert.equal(d.provenance.model,null);
+          assert.equal(d.provenance.realRespondents,0);
+          assert.equal(d.confidence.mirrorScore,null);
+          assert.equal(d.rows.length,18);
+          for(const conceptId of ["A","B"]){
+            const rows=d.rows.filter(x=>x.segment==="young-professionals"&&x.conceptId===conceptId);
+            assert.ok(rows[0].interestIndex>rows[2].interestIndex);
+          }
+          JS
+      - name: No AI inference without opt-in
+        run: |
+          cat > /tmp/brief.json <<'JSON'
+          {"country":"Bangladesh","city":"Dhaka","targetSegment":"young-professionals","concepts":[{"id":"A","name":"Midnight Focus","color":"black","message":"Fuel the moments that matter"},{"id":"B","name":"Crimson Lift","color":"red","message":"A bright boost for your busy day"}]}
+          JSON
+          status=$(curl -sS -o /tmp/unauthorized.json -w '%{http_code}' -H 'Content-Type: application/json' --data-binary @/tmp/brief.json "$BASE/api/analyze")
+          test "$status" = 403
+          status=$(curl -sS -o /tmp/invalid.json -w '%{http_code}' -H 'Content-Type: application/json' -H 'x-mirrorasia-ai-opt-in: yes' -d '{"invalid":true}' "$BASE/api/analyze")
+          test "$status" = 400
+      - name: Real bounded Workers AI inference with provenance
+        run: |
+          status=429
+          for attempt in 1 2 3 4 5 6 7 8; do
+            status=$(curl -sS --max-time 75 -o /tmp/ai.json -w '%{http_code}' -H 'Content-Type: application/json' -H 'x-mirrorasia-ai-opt-in: yes' --data-binary @/tmp/brief.json "$BASE/api/analyze")
+            if [ "$status" = 200 ]; then break; fi
+            if [ "$status" != 429 ]; then cat /tmp/ai.json; exit 1; fi
+            sleep 15
+          done
+          test "$status" = 200
+          node <<'JS'
+          const assert=require("node:assert/strict");
+          const a=require("/tmp/ai.json");
+          assert.equal(a.mode,"ai-hypothesis");
+          assert.ok(a.model.startsWith("@cf/"));
+          assert.equal(a.realRespondents,0);
+          assert.equal(a.calibrated,false);
+          for(const key of ["summary","conceptA","conceptB","tradeoffs","risks","nextStep"]){
+            assert.ok(typeof a.analysis[key]==="string"&&a.analysis[key].length>=5,key);
+          }
+          JS
+      - name: Confirm AI result is never recorded as empirical evidence
+        run: |
+          node <<'JS'
+          const assert=require("node:assert/strict");
+          const d=require("/tmp/ai.json");
+          assert.equal(d.realRespondents,0);
+          assert.equal(d.calibrated,false);
+          assert.ok(d.warning.includes("not research findings"));
+          assert.ok(d.methodology.includes("no observed consumer responses"));
+          JS

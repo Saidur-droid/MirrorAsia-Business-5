@@ -1,0 +1,55 @@
+name: MirrorAsia Readiness — patch, verify and bundle
+on:
+  push:
+    branches: [fix/mirrorasia-readiness-20261104]
+    paths:
+      - "package.json"
+      - "src/**"
+      - "scripts/**"
+      - "worker/entry.ts"
+      - "worker/ai-analysis.mjs"
+      - "tests/**"
+      - ".github/workflows/mirrorasia-readiness-build.yml"
+  workflow_dispatch:
+concurrency:
+  group: mirrorasia-readiness-build-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: write
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+      - name: Refresh lockfile with patched dependencies
+        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+      - name: Verify reproducible install
+        run: npm ci --no-audit --no-fund
+      - name: Verify tests and types
+        run: |
+          npm test
+          npm run typecheck
+      - name: Build complete React Studio and Worker assets
+        run: |
+          npm run build:pages
+          npm run build:worker
+          node scripts/build-readiness-staging.mjs
+          npm run build
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=high
+      - name: Commit lockfile and tested full-Studio bundle
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package-lock.json worker/generated-assets.ts cloudflare-generated/mirrorasia-readiness-staging.js
+          if ! git diff --staged --quiet; then
+            git commit -m "build: refresh patched lockfile and complete Studio assets [skip ci]"
+            git push
+          fi

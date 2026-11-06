@@ -1,0 +1,57 @@
+name: MirrorAsia Cloudflare production smoke
+on:
+  push:
+    branches: [fix/mirrorasia-readiness-20261104]
+    paths:
+      - ".github/workflows/mirrorasia-production-smoke.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  candidate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    env:
+      BASE: https://mirrorasia-iabc-2026.mirrorasia-builders.workers.dev
+    steps:
+      - name: Check preserved landing page
+        run: |
+          curl --fail --silent --show-error --retry 3 --retry-delay 2 "$BASE/" -o /tmp/home.html
+          grep -qi 'Simulate better decisions' /tmp/home.html
+      - name: Check new React Studio and static assets
+        run: |
+          curl --fail --silent --show-error --retry 3 --retry-delay 2 "$BASE/studio" -o /tmp/studio.html
+          grep -q '/assets/entry.js' /tmp/studio.html
+          curl --fail --silent --show-error "$BASE/assets/entry.js" -o /tmp/studio.js
+          curl --fail --silent --show-error "$BASE/assets/app.css" -o /tmp/studio.css
+          test "$(wc -c < /tmp/studio.js)" -gt 200000
+          grep -q 'evidence-toolbar' /tmp/studio.css
+      - name: Check preserved health endpoint
+        run: |
+          curl --fail --silent --show-error "$BASE/api/health" -o /tmp/health.json
+          node -e 'const x=require("/tmp/health.json"); if(x.status!=="ok")process.exit(1)'
+      - name: Check patched simulation response, validation and provenance
+        run: |
+          cat > /tmp/request.json <<'JSON'
+          {"country":"Bangladesh","city":"Dhaka","targetSegment":"young-professionals","concepts":[{"id":"A","name":"Midnight Focus","color":"black","message":"Fuel the moments that matter"},{"id":"B","name":"Crimson Lift","color":"red","message":"A bright boost for your busy day"}],"prices":[79,89,99],"syntheticAgents":120,"seed":42}
+          JSON
+          curl --fail --silent --show-error -H 'Content-Type: application/json' --data-binary @/tmp/request.json "$BASE/api/simulate" -o /tmp/simulation.json
+          node <<'JS'
+          const assert=require("node:assert/strict");
+          const x=require("/tmp/simulation.json");
+          assert.equal(x.mode,"preview");
+          assert.equal(x.provenance.model,null);
+          assert.equal(x.provenance.realRespondents,0);
+          assert.equal(x.confidence.mirrorScore,null);
+          assert.equal(x.rows.length,18);
+          for(const id of ["A","B"]){
+            const rows=x.rows.filter(r=>r.segment==="young-professionals"&&r.conceptId===id);
+            assert.equal(rows.length,3);
+            assert.ok(rows[0].interestIndex>rows[2].interestIndex);
+            assert.ok(rows[0].interestIndex>=rows[1].interestIndex&&rows[1].interestIndex>=rows[2].interestIndex);
+          }
+          JS
+      - name: Check malformed input rejected
+        run: |
+          status=$(curl -sS -o /tmp/invalid.json -w '%{http_code}' -H 'Content-Type: application/json' -d '{"invalid":true}' "$BASE/api/simulate")
+          test "$status" = 400

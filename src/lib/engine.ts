@@ -68,6 +68,13 @@ function syntheticRandom(seed: number, segment: Segment, id: ConceptId, agent: n
     value ^= key.charCodeAt(i);
     value = Math.imul(value, 16777619);
   }
+  // Avalanche the FNV hash: sequential synthetic agent IDs otherwise cluster,
+  // hiding changes in assumed price sensitivity at small sample sizes.
+  value ^= value >>> 16;
+  value = Math.imul(value, 0x7feb352d);
+  value ^= value >>> 15;
+  value = Math.imul(value, 0x846ca68b);
+  value ^= value >>> 16;
   return (value >>> 0) / 4294967296;
 }
 function simpleHash(value: string): string {
