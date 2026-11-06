@@ -7,8 +7,13 @@ on:
       - "src/**"
       - "scripts/**"
       - "worker/entry.ts"
+      - "worker/ai-analysis.mjs"
+      - "tests/**"
       - ".github/workflows/mirrorasia-readiness-build.yml"
   workflow_dispatch:
+concurrency:
+  group: mirrorasia-readiness-build-${{ github.ref }}
+  cancel-in-progress: true
 permissions:
   contents: write
 jobs:
