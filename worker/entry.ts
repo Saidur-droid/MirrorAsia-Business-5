@@ -2,7 +2,6 @@
 import { handleAiAnalysis } from "./ai-analysis.mjs";
 // @ts-ignore Cloudflare module bundle resolves the sibling JavaScript Worker module at deploy time.
 import { handleHumanResearch } from "./human-research.mjs";
-import { handleHumanResearch } from "./human-research.mjs";
 import {HTML, JS, CSS} from "./generated-assets";
 import {Client} from "pg";
 import {parseScenario,ScenarioInputError} from "../src/lib/schema";
