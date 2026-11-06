@@ -1,3 +1,4 @@
+// @ts-ignore Cloudflare module bundle resolves the sibling JavaScript Worker module at deploy time.
 import { handleAiAnalysis } from "./ai-analysis.mjs";
 // @ts-ignore Cloudflare module bundle resolves the sibling JavaScript Worker module at deploy time.
 import { handleHumanResearch } from "./human-research.mjs";
