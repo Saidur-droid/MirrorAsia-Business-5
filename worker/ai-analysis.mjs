@@ -62,12 +62,26 @@ export async function handleAiAnalysis(request,env){
     if(body.length>MAX_BODY)return respond({error:"Body too large"},413);
     brief=validateBrief(JSON.parse(body));
   }catch(e){return respond({error:"Invalid concept brief. "+(e instanceof Error?e.message:"")},400);}
-  if(!env?.AI||!env?.AI_RATE_GLOBAL||!env?.AI_RATE_IP)return respond({error:"AI service unavailable"},503);
+  if(!env?.AI||!env?.AI_RATE_GLOBAL||!env?.AI_RATE_IP||!env?.AI_QUOTA)return respond({error:"AI service unavailable"},503);
   const global=await env.AI_RATE_GLOBAL.limit({key:"all-analyze"});
   if(!global.success)return respond({error:"AI demo capacity reached. Retry later."},429);
   const ip=(request.headers.get("cf-connecting-ip")||"unknown").slice(0,100);
   const visitor=await env.AI_RATE_IP.limit({key:ip});
   if(!visitor.success)return respond({error:"Too many AI requests from this visitor."},429);
+  // D1 enforces a strict, account-wide UTC daily cap across all edge locations.
+  // A failed inference still consumes a slot; this is deliberately conservative.
+  try{
+    const day=new Date().toISOString().slice(0,10);
+    const reserved=await env.AI_QUOTA.prepare(
+      "INSERT INTO mirrorasia_ai_daily_quota (day, requests, updated_at) VALUES (?, 1, CURRENT_TIMESTAMP) "+
+      "ON CONFLICT(day) DO UPDATE SET requests = requests + 1, updated_at = CURRENT_TIMESTAMP "+
+      "WHERE requests < 25 RETURNING requests"
+    ).bind(day).first();
+    if(!reserved)return respond({error:"AI daily budget exhausted. Try again after 00:00 UTC."},429);
+  }catch(e){
+    console.error(JSON.stringify({event:"mirrorasia_ai_quota_unavailable"}));
+    return respond({error:"AI quota service temporarily unavailable"},503);
+  }
   try{
     const analysis=await analyzeBrief(brief,env.AI);
     return respond({mode:"ai-hypothesis",model:AI_MODEL,realRespondents:0,calibrated:false,
