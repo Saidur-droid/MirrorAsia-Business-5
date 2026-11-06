@@ -49,7 +49,7 @@ test("global throttle prevents model call",async()=>{
 test("AI output reports model provenance and zero real humans",async()=>{
   let invoked=0;
   const r=await handleAiAnalysis(req(body),{
-    AI:{run(model,input){invoked++;assert.equal(model,AI_MODEL);assert.ok(input.max_tokens<=500);
+    AI:{run(model,input){invoked++;assert.equal(model,AI_MODEL);assert.ok(input.max_tokens<=650);
       return {response:JSON.stringify(sample)};}},
     AI_RATE_GLOBAL:{limit:async()=>({success:true})},AI_RATE_IP:{limit:async()=>({success:true})},AI_QUOTA:successfulQuota
   });
@@ -90,4 +90,16 @@ test("quota database failure closes AI route without inference",async()=>{
    AI_QUOTA:{prepare(){throw Error("db down")}}
  });
  assert.equal(r.status,503);assert.equal(invoked,0);
+});
+
+test("invalid first model response receives one bounded recovery",async()=>{
+ let calls=0;
+ const r=await handleAiAnalysis(req(body),{
+   AI:{run:async()=>{calls++;return {response:calls===1?"not JSON":JSON.stringify(sample)};}},
+   AI_RATE_GLOBAL:{limit:async()=>({success:true})},
+   AI_RATE_IP:{limit:async()=>({success:true})},
+   AI_QUOTA:successfulQuota
+ });
+ assert.equal(r.status,200);
+ assert.equal(calls,2);
 });
