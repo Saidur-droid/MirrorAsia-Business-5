@@ -7,8 +7,8 @@ const HEADER = "studyId,segment,conceptId,price,positive,respondents,consentVeri
 
 export function parseHumanAggregateCSV(csv: string): HumanBenchmark[] {
   if (csv.length > 32000) throw new Error("CSV exceeds 32 KB limit.");
-  const lines = csv.replaceAll("\r", "").trim().split("\n");
-  if (lines.length < 2 || lines[0].trim() !== HEADER) {
+  const lines = csv.replaceAll("\r", "").trimEnd().split("\n");
+  if (lines[0].trim() !== HEADER) {
     throw new Error("Use the exact aggregate research CSV header from the downloaded template.");
   }
   if (lines.length > 301) throw new Error("At most 300 aggregate observations are accepted.");
@@ -43,5 +43,4 @@ export function compareAggregateEvidence(result: SimulationResult, csv: string):
   return compareToHumanEvidence(result.rows, observations);
 }
 
-export const HUMAN_AGGREGATE_TEMPLATE = HEADER + "\n" +
-  "# Complete only with genuine, consented, aggregated responses. Do not upload personal data.\n";
+export const HUMAN_AGGREGATE_TEMPLATE = HEADER + "\n";
