@@ -1,3 +1,5 @@
+import { handleAiAnalysis } from "./ai-analysis.mjs";
+import { handleHumanResearch } from "./human-research.mjs";
 import {HTML, JS, CSS} from "./generated-assets";
 import {Client} from "pg";
 import {parseScenario,ScenarioInputError} from "../src/lib/schema";
@@ -30,6 +32,8 @@ const extraHeaders={
 export default {
  async fetch(request:Request,env:WorkerEnv):Promise<Response> {
    const url=new URL(request.url);
+   if(url.pathname==="/api/research/study"||url.pathname==="/api/research/results"||url.pathname==="/api/research/submit")return handleHumanResearch(request,env);
+   if(url.pathname==="/api/analyze")return handleAiAnalysis(request,env);
    if(url.pathname==="/api/internal/db-check") {if(request.method!=="GET")return json({error:"Method not allowed"},405);return checkDatabase(env,request);}
    if(request.method==="GET" && url.pathname==="/api/health")
      return json({status:"ok",service:"mirrorasia-mvp",runtime:"cloudflare-worker",version:"0.1.0"});
