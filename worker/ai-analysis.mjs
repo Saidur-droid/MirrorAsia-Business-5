@@ -53,6 +53,7 @@ export async function analyzeBrief(brief,ai){
 }
 export async function handleAiAnalysis(request,env){
   if(request.method!=="POST")return respond({error:"Method not allowed"},405);
+  if(request.headers.get("x-mirrorasia-ai-opt-in")!=="yes")return respond({error:"Explicit AI opt-in required"},403);
   if((request.headers.get("content-type")||"").split(";")[0].trim()!=="application/json")return respond({error:"Expected application/json"},415);
   if(Number(request.headers.get("content-length")||0)>MAX_BODY)return respond({error:"Body too large"},413);
   let brief;
