@@ -21,7 +21,6 @@ export default function Home() {
   const [result, setResult] = useState<SimulationResult | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [accessKey, setAccessKey] = useState("");
   const [humanCheck, setHumanCheck] = useState(false);
   const [activeTab, setActiveTab] = useState<"results" | "method">("results");
   function updateConcept(index: 0 | 1, patch: Partial<Concept>) {
@@ -100,7 +99,6 @@ export default function Home() {
       const response = await fetch("/api/simulate", {
         method: "POST", headers: {
           "Content-Type": "application/json",
-          ...(accessKey.trim() ? { "x-demo-access-key": accessKey.trim() } : {})
         }, body: JSON.stringify(scenario)
       });
       const data: unknown = await response.json();
@@ -151,7 +149,7 @@ export default function Home() {
         <section className="panel"><div className="panel-heading"><div><div className="eyebrow">03 / PRICING EXPLORATION</div><h2>Explore price sensitivity</h2></div><span className="muted-icon">৳</span></div><div className="pricing-row">{[79,89,99].map(price=><button type="button" key={price} onClick={()=>{setScenario(s=>({...s,prices:s.prices.includes(price)?(s.prices.length>2?s.prices.filter(p=>p!==price):s.prices):[...s.prices,price].sort((a,b)=>a-b)}));setResult(null)}} className={"price-chip "+(scenario.prices.includes(price)?"checked":"")}>{scenario.prices.includes(price)?"✓ ":""}৳{price}</button>)}</div><p className="field-footnote">Select at least two prices. All concepts are compared at each selected price.</p><p className="field-footnote">Preview scores use declared assumptions. <strong>Marketing messages are not analyzed in deterministic preview mode.</strong></p>
           <div className="simulation-control"><span><strong>Illustrative agents per segment</strong><small>Seeded synthetic signals, not human respondents</small></span><strong>{scenario.syntheticAgents}</strong></div>
           <div className="run-footer"><div className="privacy-hint">◇ Inputs and demo results are not stored on our server.</div><button className="primary-button" type="button" disabled={busy} onClick={simulate}>{busy?"Running...":"✦ Run simulation"} <span>→</span></button></div>
-          <details className="advanced"><summary>Advanced: protected live AI mode</summary><label className="field">Demo access key<input type="password" autoComplete="off" value={accessKey} onChange={e=>setAccessKey(e.target.value)} placeholder="Only if live AI is enabled server-side"/></label><p className="field-footnote">Preview mode runs without an API key. Live AI requires operator configuration and may incur model charges.</p></details>
+          <div className="advanced"><div className="confidence-status"><span className="amber-dot"/> AI-assisted analysis is not enabled</div><p className="field-footnote">This release uses deterministic, hand-authored assumptions only. No external model is called. AI-assisted concept analysis will appear here after model access, security controls and usage limits are verified.</p></div>
           {error&&<div className="error-box" role="alert">{error}</div>}
         </section>
       </div>
