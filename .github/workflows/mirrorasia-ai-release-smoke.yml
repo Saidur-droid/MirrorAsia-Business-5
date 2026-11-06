@@ -71,7 +71,13 @@ jobs:
             assert.ok(typeof a.analysis[key]==="string"&&a.analysis[key].length>=5,key);
           }
           JS
-      - name: Global inference throttle enforces HTTP 429
+      - name: Confirm AI result is never recorded as empirical evidence
         run: |
-          status=$(curl -sS -o /tmp/throttle.json -w '%{http_code}' -H 'Content-Type: application/json' -H 'x-mirrorasia-ai-opt-in: yes' --data-binary @/tmp/brief.json "$BASE/api/analyze")
-          test "$status" = 429
+          node <<'JS'
+          const assert=require("node:assert/strict");
+          const d=require("/tmp/ai.json");
+          assert.equal(d.realRespondents,0);
+          assert.equal(d.calibrated,false);
+          assert.ok(d.warning.includes("not research findings"));
+          assert.ok(d.methodology.includes("no observed consumer responses"));
+          JS
