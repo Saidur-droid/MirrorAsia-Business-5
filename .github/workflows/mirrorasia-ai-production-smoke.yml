@@ -1,4 +1,4 @@
-name: MirrorAsia AI production release end-to-end
+name: MirrorAsia AI production release — Llama 70B
 on:
   push:
     branches: [fix/mirrorasia-readiness-20261104]
