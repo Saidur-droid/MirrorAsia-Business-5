@@ -49,7 +49,7 @@ export default function Home() {
     const fingerprint=conceptFingerprint;
     try {
       const response=await fetch("/api/analyze",{
-        method:"POST",headers:{"Content-Type":"application/json"},
+        method:"POST",headers:{"Content-Type":"application/json","x-mirrorasia-ai-opt-in":"yes"},
         body:JSON.stringify({country:scenario.country,city:scenario.city,
           targetSegment:scenario.targetSegment,concepts:scenario.concepts})
       });
