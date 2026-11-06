@@ -3,6 +3,8 @@
 import { useMemo, useState } from "react";
 import type { Concept, Scenario, Segment } from "../lib/schema.ts";
 import type { SimulationResult } from "../lib/engine.ts";
+import { compareAggregateEvidence, HUMAN_AGGREGATE_TEMPLATE } from "../lib/research.ts";
+import type { BenchmarkComparison } from "../lib/evaluation.ts";
 
 const segments: { value: Segment; label: string; note: string }[] = [
   { value: "young-professionals", label: "Young professionals", note: "Illustrative age 22-35" },
@@ -16,20 +18,70 @@ const initialScenario: Scenario = {
   concepts: [firstConcept, secondConcept], prices: [79, 89, 99], syntheticAgents: 120, seed: 42
 };
 const format = (segment: Segment) => segments.find(s => s.value === segment)?.label || segment;
+interface AiHypothesis {
+  mode: "ai-hypothesis";
+  model: string;
+  realRespondents: 0;
+  calibrated: false;
+  analysis: Record<"summary"|"conceptA"|"conceptB"|"tradeoffs"|"risks"|"nextStep", string>;
+  warning: string;
+}
+
 export default function Home() {
   const [scenario, setScenario] = useState<Scenario>(initialScenario);
   const [result, setResult] = useState<SimulationResult | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [humanCheck, setHumanCheck] = useState(false);
+  const [aiConsent, setAiConsent] = useState(false);
+  const [aiBusy, setAiBusy] = useState(false);
+  const [aiError, setAiError] = useState("");
+  const [aiOutput, setAiOutput] = useState<{fingerprint:string; data:AiHypothesis}|null>(null);
+  const [researchText, setResearchText] = useState("");
+  const [researchReport, setResearchReport] = useState<BenchmarkComparison|null>(null);
+  const [researchError, setResearchError] = useState("");
   const [activeTab, setActiveTab] = useState<"results" | "method">("results");
+  const conceptFingerprint=JSON.stringify({targetSegment:scenario.targetSegment,concepts:scenario.concepts});
+  const visibleAi=aiOutput?.fingerprint===conceptFingerprint ? aiOutput.data : null;
+  async function analyzeWithAI() {
+    if (!aiConsent || aiBusy) return;
+    setAiBusy(true);setAiError("");setAiOutput(null);
+    const fingerprint=conceptFingerprint;
+    try {
+      const response=await fetch("/api/analyze",{
+        method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({country:scenario.country,city:scenario.city,
+          targetSegment:scenario.targetSegment,concepts:scenario.concepts})
+      });
+      const parsed:unknown=await response.json();
+      if(!response.ok)throw Error(
+        typeof parsed==="object"&&parsed!==null&&"error" in parsed ? String(parsed.error) : "AI analysis unavailable."
+      );
+      if(typeof parsed!=="object"||parsed===null||!("mode" in parsed)||parsed.mode!=="ai-hypothesis")
+        throw Error("Unexpected AI response.");
+      setAiOutput({fingerprint,data:parsed as AiHypothesis});
+    }catch(e){setAiError(e instanceof Error?e.message:"AI analysis unavailable.");}
+    finally{setAiBusy(false);}
+  }
+  function compareResearch() {
+    setResearchReport(null);setResearchError("");
+    if(!result){setResearchError("Run the current synthetic scenario first.");return;}
+    try{
+      const report=compareAggregateEvidence(result,researchText);
+      if(!report){setResearchError("No genuine aggregate observations supplied. Calibration remains unavailable.");return;}
+      setResearchReport(report);
+    }catch(e){setResearchError(e instanceof Error?e.message:"Invalid aggregate evidence.");}
+  }
+  function downloadResearchTemplate() {
+    downloadText("mirrorasia-consented-aggregate-template.csv","text/csv;charset=utf-8",HUMAN_AGGREGATE_TEMPLATE);
+  }
   function updateConcept(index: 0 | 1, patch: Partial<Concept>) {
     setScenario(s => ({ ...s, concepts: s.concepts.map((c,i) => i === index ? { ...c, ...patch } : c) as [Concept, Concept] }));
-    setResult(null);
+    setResult(null);setResearchReport(null);
   }
   function setSegment(targetSegment: Segment) {
     setScenario(s => ({ ...s, targetSegment }));
-    setResult(null);
+    setResult(null);setResearchReport(null);
   }
   function downloadText(filename: string, mimeType: string, text: string) {
     const blobUrl = URL.createObjectURL(new Blob([text], { type: mimeType }));
@@ -94,7 +146,7 @@ export default function Home() {
     downloadText("mirrorasia-human-check-protocol.md", "text/markdown;charset=utf-8", lines.join("\n"));
   }
   async function simulate() {
-    setBusy(true); setError(""); setHumanCheck(false); setResult(null);
+    setBusy(true); setError(""); setHumanCheck(false); setResult(null);setResearchReport(null);
     try {
       const response = await fetch("/api/simulate", {
         method: "POST", headers: {
@@ -149,7 +201,19 @@ export default function Home() {
         <section className="panel"><div className="panel-heading"><div><div className="eyebrow">03 / PRICING EXPLORATION</div><h2>Explore price sensitivity</h2></div><span className="muted-icon">৳</span></div><div className="pricing-row">{[79,89,99].map(price=><button type="button" key={price} onClick={()=>{setScenario(s=>({...s,prices:s.prices.includes(price)?(s.prices.length>2?s.prices.filter(p=>p!==price):s.prices):[...s.prices,price].sort((a,b)=>a-b)}));setResult(null)}} className={"price-chip "+(scenario.prices.includes(price)?"checked":"")}>{scenario.prices.includes(price)?"✓ ":""}৳{price}</button>)}</div><p className="field-footnote">Select at least two prices. All concepts are compared at each selected price.</p><p className="field-footnote">Preview scores use declared assumptions. <strong>Marketing messages are not analyzed in deterministic preview mode.</strong></p>
           <div className="simulation-control"><span><strong>Illustrative agents per segment</strong><small>Seeded synthetic signals, not human respondents</small></span><strong>{scenario.syntheticAgents}</strong></div>
           <div className="run-footer"><div className="privacy-hint">◇ Inputs and demo results are not stored on our server.</div><button className="primary-button" type="button" disabled={busy} onClick={simulate}>{busy?"Running...":"✦ Run simulation"} <span>→</span></button></div>
-          <div className="advanced"><div className="confidence-status"><span className="amber-dot"/> AI-assisted analysis is not enabled</div><p className="field-footnote">This release uses deterministic, hand-authored assumptions only. No external model is called. AI-assisted concept analysis will appear here after model access, security controls and usage limits are verified.</p></div>
+          <div className="ai-action">
+            <div className="eyebrow">AI / CONCEPT CRITIQUE</div><h3>Optional AI-assisted review</h3>
+            <p className="field-footnote">Run a real model on names, packaging colors and marketing messages. This <strong>does not simulate consumers</strong> or change the synthetic scores. Rate-limited public demo; brief text is sent to Cloudflare Workers AI for inference, not stored by MirrorAsia.</p>
+            <label className="ai-consent"><input type="checkbox" checked={aiConsent} onChange={e=>setAiConsent(e.target.checked)}/> I understand that this produces hypotheses, not human research, and I agree to process these concept details with Cloudflare AI.</label>
+            <button type="button" className="evidence-button" disabled={!aiConsent||aiBusy} onClick={analyzeWithAI}>{aiBusy?"Reviewing concepts...":"✦ Analyze concepts with AI"}</button>
+            {aiError&&<div className="error-box" role="alert">{aiError}</div>}
+            {visibleAi&&<div className="ai-result" aria-live="polite">
+              <div className="eyebrow">MODEL-GENERATED HYPOTHESES · NO REAL RESPONDENTS</div>
+              <p className="field-footnote"><strong>Model:</strong> {visibleAi.model} · Real humans: 0 · Not calibrated</p>
+              {([["summary","Overview"],["conceptA","Concept A"],["conceptB","Concept B"],["tradeoffs","Trade-offs"],["risks","Risks"],["nextStep","Next test"]] as const).map(([key,label])=><div className="ai-finding" key={key}><strong>{label}</strong><p>{visibleAi.analysis[key]}</p></div>)}
+              <p className="result-notice">{visibleAi.warning}</p>
+            </div>}
+          </div>
           {error&&<div className="error-box" role="alert">{error}</div>}
         </section>
       </div>
@@ -164,7 +228,18 @@ export default function Home() {
         </div>}
       </section>
       <section className="panel confidence-panel"><div className="panel-heading"><div><div className="eyebrow">CONFIDENCE LAB</div><h2>Trust, not just numbers.</h2></div><span>♧</span></div><div className="confidence-status"><span className="amber-dot"/> Uncalibrated prototype</div><div className="metric-row"><span>Human benchmark</span><strong>Not available</strong></div><div className="metric-row"><span>Validated error range</span><strong>Not measured</strong></div><div className="metric-row"><span>MirrorScore</span><strong>Not available</strong></div><p className="confidence-note">Confidence requires real, consented benchmark evidence. We do not assign a score without it.</p></section>
-      <section className="panel human-panel"><div className="human-header"><span className="human-symbol">♡</span><div><h3>Human Check</h3><p>Validate the most important scenario with real people.</p></div></div><button type="button" className="outline-button" onClick={()=>setHumanCheck(v=>!v)}>{humanCheck?"Hide research plan":"View validation plan"} <span>→</span></button>{humanCheck&&<div className="human-plan"><strong>Consent-first research plan</strong><p>Use the same scenario for consented human research and synthetic comparison. This does not recruit anyone, collect responses or claim validation.</p><button type="button" className="evidence-button" onClick={downloadResearchProtocol}>Download study protocol ↓</button></div>}</section>
+      <section className="panel human-panel"><div className="human-header"><span className="human-symbol">♡</span><div><h3>Human Check</h3><p>Validate the most important scenario with real people.</p></div></div><button type="button" className="outline-button" onClick={()=>setHumanCheck(v=>!v)}>{humanCheck?"Hide research plan":"View validation plan"} <span>→</span></button>{humanCheck&&<div className="human-plan"><strong>Consent-first research plan</strong><p>Use the same scenario for consented human research and synthetic comparison. This does not recruit anyone, collect responses or claim validation.</p><button type="button" className="evidence-button" onClick={downloadResearchProtocol}>Download study protocol ↓</button>
+          <div className="research-import"><h4>Compare consented aggregate research</h4>
+            <p className="field-footnote">Only de-identified aggregate counts with documented consent. Data stays in this browser, is never uploaded, and is not saved. No individual responses or personal information.</p>
+            <button type="button" className="evidence-button" onClick={downloadResearchTemplate}>Download aggregate template ↓</button>
+            <label className="field">Paste completed aggregate CSV<textarea rows={5} maxLength={32000} value={researchText} placeholder="studyId,segment,conceptId,price,positive,respondents,consentVerified,source,observedAt" onChange={e=>{setResearchText(e.target.value);setResearchReport(null);setResearchError("");}}/></label>
+            <button type="button" className="outline-button" onClick={compareResearch}>Compare with synthetic baseline</button>
+            {researchError&&<p className="field-footnote" role="status">{researchError}</p>}
+            {researchReport&&<div className="research-summary"><strong>Provisional, self-reported aggregate comparison</strong>
+              <p>Matched cells: {researchReport.count} · Mean absolute error: {researchReport.meanAbsolutePercentagePointError} percentage points · Coverage: {researchReport.coverage}.</p>
+              <p>No independent study audit or calibrated MirrorScore. These figures rely on the evidence supplied, not verified by MirrorAsia.</p>
+            </div>}
+          </div></div>}</section>
       </div></div>
       <footer className="footnote">MirrorAsia prototype v0.1 · Bangladesh FMCG · No respondent data, revenue, measured calibration or market-accuracy claims.</footer></div>
     </main>
