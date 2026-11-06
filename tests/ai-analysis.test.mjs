@@ -12,7 +12,7 @@ const body = {
 const sample={summary:"Two distinct concepts worth testing",conceptA:"Dark color signals focus hypothetically",
   conceptB:"Red color can signal energy hypothetically",tradeoffs:"The clarity and tone differ",
   risks:"No actual preference data supports either idea",nextStep:"Run an informed-consent comprehension test"};
-function req(data,headers={"Content-Type":"application/json"}){
+function req(data,headers={"Content-Type":"application/json","x-mirrorasia-ai-opt-in":"yes"}){
   return new Request("https://example.org/api/analyze",{method:"POST",headers,body:JSON.stringify(data)});
 }
 test("brief accepts exactly two bounded Bangladesh concepts",()=>{
@@ -63,4 +63,9 @@ test("bad model output causes no invented fallback",async()=>{
     AI_RATE_GLOBAL:{limit:async()=>({success:true})},AI_RATE_IP:{limit:async()=>({success:true})}
   });
   assert.equal(r.status,502);
+});
+
+test("inference denied without explicit opt-in header",async()=>{
+ const r=await handleAiAnalysis(req(body,{"Content-Type":"application/json"}),{});
+ assert.equal(r.status,403);
 });
