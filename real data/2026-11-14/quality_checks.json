@@ -1,0 +1,20 @@
+{
+  "research_snapshot": "2026-11-14",
+  "data_type": "published official aggregates; manually transcribed; original PDFs not bulk parsed",
+  "chattogram_wards": 41,
+  "chattogram_male_plus_female": 3230262,
+  "chattogram_ward_households": 823242,
+  "chattogram_printed_households": 822882,
+  "chattogram_household_discrepancy": 360,
+  "sylhet_wards": 27,
+  "sylhet_male_plus_female": 532748,
+  "sylhet_ward_households": 116711,
+  "sylhet_printed_households": 116711,
+  "city_total_including_hijra": 14059132,
+  "real_consumer_benchmark_available": false,
+  "buying_accuracy_measured": false,
+  "dhaka_ward_level_extracted": false,
+  "worldpop_ingested": false,
+  "mics_ingested": false,
+  "commercial_rights_reviewed": false
+}
