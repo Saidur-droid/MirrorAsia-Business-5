@@ -10,7 +10,7 @@ if (!token || token.length < 32) {
 }
 
 function parseToolJson(result) {
-  assert.equal(result.isError, false, "MCP tool returned an error");
+  assert.notEqual(result.isError, true, "MCP tool returned an error");
   const text = result.content?.find((item) => item.type === "text")?.text;
   assert.ok(text, "MCP tool did not return a text payload");
   return JSON.parse(text);
