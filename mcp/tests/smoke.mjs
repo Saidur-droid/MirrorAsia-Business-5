@@ -27,10 +27,15 @@ async function connect(path) {
       }
     }
   );
-  const client = new Client({
-    name: "mirrorasia-mcp-smoke",
-    version: "0.1.0"
-  });
+  const client = new Client(
+    {
+      name: "mirrorasia-mcp-smoke",
+      version: "0.1.0"
+    },
+    {
+      versionNegotiation: { mode: "auto" }
+    }
+  );
   await client.connect(transport);
   return client;
 }
