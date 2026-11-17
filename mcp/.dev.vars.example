@@ -1,0 +1,2 @@
+# Copy to .dev.vars and replace with a random value of at least 32 characters.
+MCP_API_TOKEN=replace-with-a-random-32-plus-character-token

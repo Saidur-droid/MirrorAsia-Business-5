@@ -1,0 +1,64 @@
+name: MirrorAsia MCP CI
+
+on:
+  push:
+    branches:
+      - main
+      - feat/iabc-2026-mvp-foundation
+      - feat/mcp-usage-infrastructure
+    paths:
+      - "mcp/**"
+      - "src/lib/**"
+      - ".github/workflows/mcp-ci.yml"
+  pull_request:
+    paths:
+      - "mcp/**"
+      - "src/lib/**"
+      - ".github/workflows/mcp-ci.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: mcp
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install MCP dependencies
+        run: npm install --no-audit --no-fund
+      - name: TypeScript validation
+        run: npm run typecheck
+      - name: Domain tests
+        run: npm test
+      - name: Cloudflare Worker bundle validation
+        run: npm run build
+      - name: Start local Worker and verify MCP protocol
+        shell: bash
+        run: |
+          token='mirrorasia-mcp-ci-token-2026-11-17-abcdef0123456789'
+          printf 'MCP_API_TOKEN=%s\n' "$token" > .dev.vars
+          npm run dev -- --port 8787 > /tmp/mirrorasia-mcp.log 2>&1 &
+          worker_pid=$!
+          trap 'kill "$worker_pid" 2>/dev/null || true' EXIT
+          ready=0
+          for i in $(seq 1 30); do
+            if curl --silent --fail http://127.0.0.1:8787/health > /tmp/mirrorasia-mcp-health.json; then
+              ready=1
+              break
+            fi
+            sleep 2
+          done
+          if [ "$ready" -ne 1 ]; then
+            cat /tmp/mirrorasia-mcp.log
+            exit 1
+          fi
+          MCP_API_TOKEN="$token" MCP_BASE_URL="http://127.0.0.1:8787" npm run smoke

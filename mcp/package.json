@@ -1,0 +1,27 @@
+{
+  "name": "@mirrorasia/mcp-service",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "wrangler dev --local",
+    "deploy": "wrangler deploy",
+    "typecheck": "tsc --noEmit",
+    "test": "node --disable-warning=ExperimentalWarning --experimental-strip-types --test tests/*.test.mjs",
+    "smoke": "node tests/smoke.mjs",
+    "build": "wrangler deploy --dry-run"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/client": "2.4.0",
+    "@modelcontextprotocol/server": "2.4.0",
+    "agents": "0.33.0",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3",
+    "wrangler": "4.164.0"
+  }
+}
